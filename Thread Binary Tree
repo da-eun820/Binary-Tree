@@ -1,0 +1,61 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <memory.h>
+
+typedef struct treeNode {
+	char data;
+	struct treeNode* left;
+	struct treeNode* right;
+	int isThreadRight;
+}treeNode;
+
+// data 루트 노드로 하여 왼쪽 서브 트리와 오른쪽 서브 트리를 연결하는 연산
+treeNode* makeRootNode(char data, treeNode* leftNode, treeNode* rightNode, int isThreadRight) {
+	treeNode* root = (treeNode*)malloc(sizeof(treeNode));
+	root->data = data;
+	root->left = leftNode;
+	root->right = rightNode;
+	root->isThreadRight = isThreadRight;
+	return root;
+}
+
+// 후속자 노드를 반환하는 연산
+treeNode* findThreadSuccessor(treeNode* p) {
+	treeNode* q = p->right;
+	if (q == NULL) return q;				// q가 NULL이라는 것은 후속자가 없다는 의미이므로 현재 q인 NULL을 반환
+	if (p->isThreadRight == 1) return q;	// isThreadRight가 true일 경우, 오른쪽 링크 필드값이 후속자 스레드 = q
+	while (q->left != NULL) q = q->left;	// p가 자식 노드를 갖고 있는 경우 중위 순회를 이어가기 위해 왼쪽 링크를 따라 내려감
+	return q;
+}
+
+// 스레드 이진 트리의 중위 순회
+void threadInorder(treeNode* root) {
+	treeNode* q;
+	q = root;
+	while (q->left)q = q->left;		// 중위 순회 시작을 위해 왼쪽 끝 노드 탐색
+	do {
+		printf("%3c", q->data);		// 현재 노드의 데이터 출력
+		q = findThreadSuccessor(q);	// 현재 노드의 오른쪽 자식을 찾고 없으면 스레드가 있으므로 후속자 q를 탐색
+	} while (q);					// q가 있는 동안 반복
+}
+
+void main() {
+	// (A*B-C/D) 수식 이진 트리 만들기
+	treeNode* n7 = makeRootNode('D', NULL, NULL, 0);	// 마지막 노드이므로 후속자 없음
+	treeNode* n6 = makeRootNode('C', NULL, NULL, 1);	// 오른쪽 링크 필드가 NULL이므로 후속자 스레드가 됨
+	treeNode* n5 = makeRootNode('B', NULL, NULL, 1);
+	treeNode* n4 = makeRootNode('A', NULL, NULL, 1);
+	treeNode* n3 = makeRootNode('/', n6, n7, 0);		// 자식 노드가 있으므로 후속자 스레드 없음
+	treeNode* n2 = makeRootNode('*', n4, n5,0);
+	treeNode* n1 = makeRootNode('-', n2, n3,0);
+
+	n4->right = n2;
+	n5->right = n1;
+	n6->right = n3;
+
+	printf("\n 스레드 이진 트리의 중위 순회 : ");
+	threadInorder(n1);
+
+	getchar();
+}
